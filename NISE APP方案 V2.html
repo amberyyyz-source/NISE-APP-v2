@@ -1,0 +1,967 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NISE 应用商店上架方案</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+  :root {
+    --bg: #050E17;
+    --bg2: #071624;
+    --teal: #00E6B2;
+    --gold: #FFD166;
+    --blue: #5B8FFF;
+    --purple: #A78BFA;
+    --rose: #FB7185;
+    --text: #EEF4FF;
+    --text2: #7A9DB8;
+    --muted: #3E5E75;
+    --border: rgba(0,230,178,0.1);
+    --cardBg: rgba(255,255,255,0.035);
+    --cardBorder: rgba(255,255,255,0.07);
+
+    /* per-plan accent colors */
+    --A: #00E6B2;
+    --B: #FFD166;
+    --C: #5B8FFF;
+    --D: #A78BFA;
+    --E: #FB7185;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Ambient glows */
+  .glow1, .glow2 {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(120px);
+    pointer-events: none;
+    z-index: 0;
+  }
+  .glow1 {
+    width: 600px; height: 500px;
+    top: -200px; left: -150px;
+    background: radial-gradient(ellipse, rgba(0,230,178,0.055) 0%, transparent 70%);
+  }
+  .glow2 {
+    width: 500px; height: 400px;
+    bottom: -150px; right: -100px;
+    background: radial-gradient(ellipse, rgba(91,143,255,0.06) 0%, transparent 70%);
+  }
+
+  /* ─── HEADER ─── */
+  header {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(5,14,23,0.88);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .header-inner {
+    max-width: 1240px; margin: 0 auto;
+    padding: 0 28px;
+    display: flex; align-items: center;
+    justify-content: space-between;
+    height: 68px; gap: 20px;
+  }
+
+  .logo {
+    display: flex; align-items: center; gap: 10px; flex-shrink: 0;
+    text-decoration: none;
+  }
+  .logo-mark {
+    width: 36px; height: 36px;
+    background: linear-gradient(135deg, var(--teal), #009E7A);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700; font-size: 15px; color: #040D14;
+  }
+  .logo-info { display: flex; flex-direction: column; }
+  .logo-name {
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 700; font-size: 16px; color: var(--text); letter-spacing: -.3px;
+  }
+  .logo-sub { font-size: 11px; color: var(--text2); margin-top: 1px; }
+
+  nav {
+    display: flex; gap: 4px;
+    background: rgba(255,255,255,0.04);
+    padding: 5px; border-radius: 50px;
+    border: 1px solid rgba(255,255,255,0.07);
+    flex-wrap: wrap;
+  }
+  .nav-btn {
+    padding: 8px 20px; border-radius: 50px;
+    border: none; cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px; font-weight: 500;
+    color: var(--text2); background: transparent;
+    transition: all .22s ease; white-space: nowrap;
+  }
+  .nav-btn:hover { color: var(--text); background: rgba(255,255,255,0.06); transform: scale(1.02); }
+  .nav-btn.active {
+    background: linear-gradient(135deg, var(--teal), #00BF96);
+    color: #040D14; font-weight: 700;
+    box-shadow: 0 2px 18px rgba(0,230,178,0.3);
+  }
+
+  /* ─── MAIN ─── */
+  main {
+    position: relative; z-index: 1;
+    max-width: 1240px; margin: 0 auto;
+    padding: 44px 28px 72px;
+  }
+
+  /* ─── PANEL SYSTEM ─── */
+  .panel { display: none; }
+  .panel.active { display: block; animation: fadeUp .38s ease; }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ─── SECTION HEADER ─── */
+  .sec-head { margin-bottom: 36px; }
+  .sec-eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 1.6px; text-transform: uppercase;
+    color: var(--teal); margin-bottom: 8px;
+  }
+  .sec-eyebrow::before {
+    content: ''; width: 16px; height: 2px;
+    background: var(--teal); border-radius: 1px;
+  }
+  .sec-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 26px; font-weight: 700;
+    color: var(--text); letter-spacing: -.4px;
+  }
+  .sec-desc {
+    margin-top: 7px; font-size: 14px;
+    color: var(--text2); line-height: 1.65; max-width: 580px;
+  }
+
+  /* ─── GRID HELPERS ─── */
+  .grid-5 { display: grid; grid-template-columns: repeat(5, 1fr); gap: 18px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+
+  /* ─── PLAN CARD BASE ─── */
+  .plan-card {
+    background: var(--cardBg);
+    border: 1px solid var(--cardBorder);
+    border-radius: 20px; padding: 26px;
+    position: relative; overflow: hidden;
+    transition: transform .28s ease, box-shadow .28s ease, border-color .28s ease;
+  }
+  .plan-card::after {
+    content: ''; position: absolute;
+    top: 0; left: 0; right: 0; height: 2px;
+    border-radius: 20px 20px 0 0;
+  }
+  .plan-card:hover { transform: translateY(-5px); }
+
+  /* Plan colour strips & hovers */
+  .pA::after { background: linear-gradient(90deg, var(--A), transparent 70%); }
+  .pB::after { background: linear-gradient(90deg, var(--B), transparent 70%); }
+  .pC::after { background: linear-gradient(90deg, var(--C), transparent 70%); }
+  .pD::after { background: linear-gradient(90deg, var(--D), transparent 70%); }
+  .pE::after { background: linear-gradient(90deg, var(--E), transparent 70%); }
+
+  .pA:hover { border-color: rgba(0,230,178,.25); box-shadow: 0 16px 48px rgba(0,0,0,.45), 0 0 0 1px rgba(0,230,178,.18); }
+  .pB:hover { border-color: rgba(255,209,102,.25); box-shadow: 0 16px 48px rgba(0,0,0,.45), 0 0 0 1px rgba(255,209,102,.18); }
+  .pC:hover { border-color: rgba(91,143,255,.25); box-shadow: 0 16px 48px rgba(0,0,0,.45), 0 0 0 1px rgba(91,143,255,.18); }
+  .pD:hover { border-color: rgba(167,139,250,.25); box-shadow: 0 16px 48px rgba(0,0,0,.45), 0 0 0 1px rgba(167,139,250,.18); }
+  .pE:hover { border-color: rgba(251,113,133,.25); box-shadow: 0 16px 48px rgba(0,0,0,.45), 0 0 0 1px rgba(251,113,133,.18); }
+
+  /* ─── BADGE ─── */
+  .badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 11px; border-radius: 20px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 11.5px; font-weight: 700;
+    letter-spacing: .4px; margin-bottom: 16px;
+  }
+  .badge .dot { width: 6px; height: 6px; border-radius: 50%; }
+
+  .bA { background: rgba(0,230,178,.1); color: var(--A); border: 1px solid rgba(0,230,178,.2); }
+  .bA .dot { background: var(--A); }
+  .bB { background: rgba(255,209,102,.1); color: var(--B); border: 1px solid rgba(255,209,102,.2); }
+  .bB .dot { background: var(--B); }
+  .bC { background: rgba(91,143,255,.1); color: var(--C); border: 1px solid rgba(91,143,255,.2); }
+  .bC .dot { background: var(--C); }
+  .bD { background: rgba(167,139,250,.1); color: var(--D); border: 1px solid rgba(167,139,250,.2); }
+  .bD .dot { background: var(--D); }
+  .bE { background: rgba(251,113,133,.1); color: var(--E); border: 1px solid rgba(251,113,133,.2); }
+  .bE .dot { background: var(--E); }
+
+  /* ─── PANEL 1: 关键词 ─── */
+  .kw-summary {
+    background: rgba(0,230,178,.04);
+    border: 1px solid rgba(0,230,178,.12);
+    border-radius: 18px; padding: 24px 28px;
+    margin-bottom: 28px;
+  }
+  .kw-summary-title {
+    font-size: 11px; font-weight: 700;
+    letter-spacing: 1.4px; text-transform: uppercase;
+    color: var(--teal); margin-bottom: 14px;
+  }
+  .kw-summary-note {
+    font-size: 13px; color: var(--text2); line-height: 1.75; margin-top: 14px;
+  }
+  .kw-summary-note strong { color: var(--text); }
+
+  .kw-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+  .tag {
+    padding: 5px 14px; border-radius: 20px;
+    font-size: 12.5px; font-weight: 500;
+    background: rgba(255,255,255,.06);
+    border: 1px solid rgba(255,255,255,.09);
+    color: var(--text2);
+    transition: all .2s ease;
+    cursor: default;
+  }
+  .tag:hover { background: rgba(255,255,255,.1); color: var(--text); }
+  .tag-hi {
+    background: rgba(0,230,178,.1); color: var(--teal);
+    border-color: rgba(0,230,178,.22);
+  }
+  .tag-hi:hover { background: rgba(0,230,178,.16); }
+
+  .kw-value-grid {
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px;
+    margin-bottom: 28px;
+  }
+  .kw-value-card {
+    background: var(--cardBg); border: 1px solid var(--cardBorder);
+    border-radius: 14px; padding: 18px 16px;
+    transition: all .25s ease;
+  }
+  .kw-value-card:hover { transform: translateY(-3px); background: rgba(255,255,255,.055); }
+  .kw-value-name {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 13px; font-weight: 700; color: var(--teal);
+    margin-bottom: 6px; word-break: break-word;
+  }
+  .kw-value-stat {
+    font-size: 11px; color: var(--text2); line-height: 1.6;
+  }
+
+  /* ─── PANEL 2: 主副标 ─── */
+  .tagline-main-t {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 15.5px; font-weight: 700; color: var(--text);
+    letter-spacing: -.2px; line-height: 1.4;
+    margin-bottom: 6px;
+  }
+  .tagline-label {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 1.2px; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 5px; margin-top: 14px;
+  }
+  .tagline-label:first-of-type { margin-top: 0; }
+  .tagline-sub {
+    font-size: 13.5px; color: var(--text2); line-height: 1.5;
+    font-style: italic;
+  }
+
+  /* ─── PANEL 3: APP 描述 ─── */
+  .desc-top-blurb {
+    font-size: 13px; color: var(--text2); line-height: 1.75;
+    padding-bottom: 16px; margin-bottom: 16px;
+    border-bottom: 1px solid rgba(255,255,255,.06);
+  }
+  .desc-chip {
+    display: inline-block; padding: 3px 10px;
+    border-radius: 6px; font-size: 10px; font-weight: 700;
+    letter-spacing: .8px; text-transform: uppercase; margin-bottom: 8px;
+  }
+  .chip-A { background: rgba(0,230,178,.1); color: var(--A); }
+  .chip-B { background: rgba(255,209,102,.1); color: var(--B); }
+  .chip-C { background: rgba(91,143,255,.1); color: var(--C); }
+
+  .desc-section {
+    margin-top: 18px; padding-top: 14px;
+    border-top: 1px solid rgba(255,255,255,.055);
+  }
+  .desc-section:first-of-type { margin-top: 0; border-top: none; padding-top: 0; }
+  .desc-section-heading {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 10.5px; font-weight: 700;
+    letter-spacing: 1px; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 12px;
+  }
+  .desc-feat { margin-bottom: 12px; }
+  .desc-feat-name { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
+  .desc-feat-text { font-size: 12.5px; color: var(--text2); line-height: 1.65; }
+
+  /* ─── PANEL 4: 图片优势 ─── */
+  .adv-row {
+    display: flex; flex-direction: column; gap: 0;
+  }
+  .adv-item {
+    display: flex; align-items: flex-start; gap: 14px;
+    padding: 14px 16px;
+    border-bottom: 1px solid rgba(255,255,255,.05);
+    transition: background .2s ease;
+  }
+  .adv-item:last-child { border-bottom: none; }
+  .adv-item:hover { background: rgba(255,255,255,.03); }
+  .adv-num {
+    width: 22px; height: 22px; border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 700; flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .num-A { background: rgba(0,230,178,.12); color: var(--A); }
+  .num-B { background: rgba(255,209,102,.12); color: var(--B); }
+  .num-C { background: rgba(91,143,255,.12); color: var(--C); }
+
+  .adv-content {}
+  .adv-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
+  .adv-desc { font-size: 12px; color: var(--text2); line-height: 1.6; }
+
+  /* ─── FOOTER ─── */
+  footer {
+    position: relative; z-index: 1;
+    border-top: 1px solid var(--border);
+    background: rgba(5,14,23,.7);
+    padding: 30px 28px;
+  }
+  .footer-inner { max-width: 1240px; margin: 0 auto; }
+  .footer-label {
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 1.4px; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 10px;
+  }
+  .footer-text {
+    font-size: 11.5px; color: var(--muted);
+    line-height: 1.85; max-width: 920px;
+  }
+  .footer-text a { color: var(--teal); text-decoration: none; }
+  .footer-text a:hover { text-decoration: underline; }
+
+  /* ─── SCROLLBAR ─── */
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: rgba(0,230,178,.18); border-radius: 3px; }
+
+  /* ─── RESPONSIVE ─── */
+  @media (max-width: 1100px) {
+    .grid-5 { grid-template-columns: repeat(3, 1fr); }
+    .kw-value-grid { grid-template-columns: repeat(3, 1fr); }
+  }
+  @media (max-width: 860px) {
+    .grid-5 { grid-template-columns: repeat(2, 1fr); }
+    .grid-3 { grid-template-columns: repeat(2, 1fr); }
+    .kw-value-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 600px) {
+    .grid-5, .grid-3, .grid-2, .kw-value-grid { grid-template-columns: 1fr; }
+    .header-inner { flex-wrap: wrap; height: auto; padding: 12px 16px; gap: 12px; }
+    nav { border-radius: 16px; }
+    .nav-btn { font-size: 12px; padding: 7px 14px; }
+    main { padding: 24px 16px 56px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="glow1"></div>
+<div class="glow2"></div>
+
+<!-- ─── HEADER ─── -->
+<header>
+  <div class="header-inner">
+    <a class="logo" href="#">
+      <div class="logo-mark">N</div>
+      <div class="logo-info">
+        <div class="logo-name">NISE</div>
+        <div class="logo-sub">App Store 上架方案</div>
+      </div>
+    </a>
+    <nav>
+      <button class="nav-btn active" data-panel="keywords">关键词</button>
+      <button class="nav-btn" data-panel="tagline">APP 主副标</button>
+      <button class="nav-btn" data-panel="description">APP 描述</button>
+      <button class="nav-btn" data-panel="visual">图片优势展示</button>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+<!-- ══════════════════════════════════════
+     PANEL 1 · 关键词（汇总）
+══════════════════════════════════════ -->
+<div class="panel active" id="panel-keywords">
+  <div class="sec-head">
+    <div class="sec-eyebrow">Panel 01</div>
+    <h2 class="sec-title">关键词部署</h2>
+    <p class="sec-desc">ASO 核心关键词汇总，覆盖优先流量词与方向分析。</p>
+  </div>
+
+  <!-- 推荐部署词 -->
+  <div class="kw-summary">
+    <div class="kw-summary-title">✦ 最终关键词部署方案</div>
+    <div class="kw-tags">
+      <span class="tag tag-hi">trading 212</span>
+      <span class="tag tag-hi">interactive brokers</span>
+      <span class="tag tag-hi">paper trading</span>
+      <span class="tag tag-hi">stock trading</span>
+      <span class="tag tag-hi">cmc invest</span>
+      <span class="tag">shares</span>
+      <span class="tag">invest</span>
+      <span class="tag">asx</span>
+      <span class="tag">US shares</span>
+    </div>
+    <div class="kw-summary-note">
+      <strong>高亮词</strong>为核心优先词：难度低（&lt;30）、有效性高（≥76），是全新 App 安全且值得优先投入的流量关键词。
+    </div>
+  </div>
+
+  <!-- 五个核心词价值卡 -->
+  <div style="font-size:11px;font-weight:700;letter-spacing:1.3px;text-transform:uppercase;color:var(--muted);margin-bottom:14px;">五个优先关键词的价值定位</div>
+  <div class="kw-value-grid">
+    <div class="kw-value-card">
+      <div class="kw-value-name">interactive brokers</div>
+      <div class="kw-value-stat">热度最高（51）<br>难度低（26）<br>竞品引流首选</div>
+    </div>
+    <div class="kw-value-card">
+      <div class="kw-value-name">paper trading</div>
+      <div class="kw-value-stat">难度最低（24）<br>吸引新手投资者<br>易转化为活跃用户</div>
+    </div>
+    <div class="kw-value-card">
+      <div class="kw-value-name">stock trading</div>
+      <div class="kw-value-stat">指标均衡<br>必须攻下的核心阵地<br>覆盖主流搜索意图</div>
+    </div>
+    <div class="kw-value-card">
+      <div class="kw-value-name">cmc invest</div>
+      <div class="kw-value-stat">竞品词<br>性价比极高<br>截流竞品用户</div>
+    </div>
+    <div class="kw-value-card">
+      <div class="kw-value-name">trading 212</div>
+      <div class="kw-value-stat">有效性 76<br>搜竞品的用户<br>愿意尝试新产品</div>
+    </div>
+  </div>
+
+  <!-- 总结 -->
+  <div class="kw-summary" style="background:rgba(91,143,255,.04);border-color:rgba(91,143,255,.14);">
+    <div class="kw-summary-title" style="color:var(--blue);">✦ 策略总结</div>
+    <div class="kw-summary-note">
+      <strong>interactive brokers、paper trading、stock trading、cmc invest、trading 212</strong> — 难度低（&lt;30）、有效性高（≥76），是全新 App 安全且值得优先投入的流量关键词。配合 <strong>shares、invest、asx、US shares</strong> 等基础词扩大覆盖面，在规避高竞争词的同时实现精准拦截。
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     PANEL 2 · APP 主副标（5个方案）
+══════════════════════════════════════ -->
+<div class="panel" id="panel-tagline">
+  <div class="sec-head">
+    <div class="sec-eyebrow">Panel 02</div>
+    <h2 class="sec-title">APP 主副标题</h2>
+    <p class="sec-desc">五个方案的 App Store 主标题与副标题，横向对比定位差异。</p>
+  </div>
+
+  <div class="grid-5">
+    <!-- A -->
+    <div class="plan-card pA">
+      <div class="badge bA"><span class="dot"></span>方案 A</div>
+      <div class="tagline-label">主标题</div>
+      <div class="tagline-main-t">NISE Invest</div>
+      <div class="tagline-label">副标题</div>
+      <div class="tagline-sub">US Stocks &amp; More.</div>
+    </div>
+    <!-- B -->
+    <div class="plan-card pB">
+      <div class="badge bB"><span class="dot"></span>方案 B</div>
+      <div class="tagline-label">主标题</div>
+      <div class="tagline-main-t">NISE: Invest. Trade.</div>
+      <div class="tagline-label">副标题</div>
+      <div class="tagline-sub">US Stocks &amp; Paper Trading</div>
+    </div>
+    <!-- C -->
+    <div class="plan-card pC">
+      <div class="badge bC"><span class="dot"></span>方案 C</div>
+      <div class="tagline-label">主标题</div>
+      <div class="tagline-main-t">NISE: Invest. Trade.</div>
+      <div class="tagline-label">副标题</div>
+      <div class="tagline-sub">Build your ultimate US stock portfolio.</div>
+    </div>
+    <!-- D -->
+    <div class="plan-card pD">
+      <div class="badge bD"><span class="dot"></span>方案 D</div>
+      <div class="tagline-label">主标题</div>
+      <div class="tagline-main-t">NISE - US Stocks</div>
+      <div class="tagline-label">副标题</div>
+      <div class="tagline-sub">Unleash your trading potential.</div>
+    </div>
+    <!-- E -->
+    <div class="plan-card pE">
+      <div class="badge bE"><span class="dot"></span>方案 E</div>
+      <div class="tagline-label">主标题</div>
+      <div class="tagline-main-t">NISE-Trading &amp; Investing</div>
+      <div class="tagline-label">副标题</div>
+      <div class="tagline-sub">Trade US Stocks. Practice with Paper Trading.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     PANEL 3 · APP 描述（3个方案）
+══════════════════════════════════════ -->
+<div class="panel" id="panel-description">
+  <div class="sec-head">
+    <div class="sec-eyebrow">Panel 03</div>
+    <h2 class="sec-title">APP 完整描述</h2>
+    <p class="sec-desc">三个方案的 App Store 完整功能描述文案，含顶部短描述与中部卖点展开。</p>
+  </div>
+
+  <div class="grid-3">
+
+    <!-- ── 方案A ── -->
+    <div class="plan-card pA" style="padding:22px">
+      <div class="badge bA"><span class="dot"></span>方案 A</div>
+      <div class="desc-chip chip-A">顶部短描述</div>
+      <div class="desc-top-blurb">
+        NISE: Earn Yield on Cash. Trade 5,000+ US Stocks 24/5. Join the next generation of Australian investors. NISE is a Sydney-based investing platform providing seamless access to 5,000+ US stocks. Ensure your uninvested capital is always working with automatic yield on cash while you wait for your next move.
+      </div>
+
+      <div class="desc-chip chip-A">中部详细描述</div>
+
+      <div class="desc-section">
+        <div class="desc-section-heading">💰 CASH THAT HUSTLES<br>Maximize your capital efficiency with automatic returns on idle funds.</div>
+        <div class="desc-feat">
+          <div class="desc-feat-name">Automatic Yield</div>
+          <div class="desc-feat-text">Your uninvested USD balances automatically generate returns with daily accrual and monthly payouts.</div>
+        </div>
+        <div class="desc-feat">
+          <div class="desc-feat-name">Always Accessible</div>
+          <div class="desc-feat-text">Your uninvested balance is available whenever you need it—no mandatory hold periods.</div>
+        </div>
+        <div class="desc-feat">
+          <div class="desc-feat-name">No Separate Accounts</div>
+          <div class="desc-feat-text">Your yield-earning balance and trading funds live in the same wallet—no internal transfers.</div>
+        </div>
+      </div>
+
+      <div class="desc-section">
+        <div class="desc-section-heading">📈 US MARKET ACCESS<br>Access thousands of opportunities across the US markets from a single, integrated wallet.</div>
+        <div class="desc-feat">
+          <div class="desc-feat-name">5,000+ US Stocks</div>
+          <div class="desc-feat-text">Trade a vast selection of US stocks with full transparency and competitive pricing.</div>
+        </div>
+        <div class="desc-feat">
+          <div class="desc-feat-name">Smart Rankings</div>
+          <div class="desc-feat-text">Identify market leaders instantly with integrated data-driven rankings across multiple sectors and performance metrics.</div>
+        </div>
+        <div class="desc-feat">
+          <div class="desc-feat-name">Fractional Shares</div>
+          <div class="desc-feat-text">Invest as little as US$10 to own a piece of global giants like Tesla, Nvidia, or Apple.</div>
+        </div>
+      </div>
+
+      <div class="desc-section">
+        <div class="desc-section-heading">🌙 OVERNIGHT ACCESS: TRADE 24/5<br>The market moves fast—NISE moves with it. React to global news as it happens, not just during regular market hours.</div>
+        <div class="desc-feat">
+          <div class="desc-feat-name">24/5 Trading</div>
+          <div class="desc-feat-text">Access specific US stocks during Australian business hours with our overnight trading session.</div>
+        </div>
+        <div class="desc-feat">
+          <div class="desc-feat-name">Full Session Coverage</div>
+          <div class="desc-feat-text">Seamlessly transition between pre-market, regular hours, and after-hours trading.</div>
+        </div>
+        <div class="desc-feat">
+          <div class="desc-feat-name">Responsive Execution</div>
+          <div class="desc-feat-text">Stay ahead of earnings reports and global events with round-the-clock market access.</div>
+        </div>
+      </div>
+
+      <div class="desc-section">
+        <div class="desc-section-heading">🔒 TRUSTED &amp; SECURE<br>Invest with confidence on a platform built for safety and transparency.</div>
+        <div class="desc-feat">
+          <div class="desc-feat-name">ASIC Regulated</div>
+          <div class="desc-feat-text">ise Invest Pty Ltd (ACN 690 010 809) is a Corporate Authorised Representative (CAR No. 001318142) of Zero Securities Pty Ltd (AFSL 244040), regulated by ASIC. </div>
+        </div>
+        <div class="desc-feat">
+          <div class="desc-feat-name">Institutional-Grade Security</div>
+          <div class="desc-feat-text">Your assets are held securely with regulated custodians and protected by bank-grade encryption.</div>
+        </div>
+        <div class="desc-feat">
+          <div class="desc-feat-name">Transparent Pricing</div>
+          <div class="desc-feat-text">Clear fee structures with no hidden costs — fully transparent commission and FX spreads.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 方案B ── -->
+    <div class="plan-card pB" style="padding:22px">
+      <div class="badge bB"><span class="dot"></span>方案 B</div>
+      <div class="desc-chip chip-B">顶部短描述</div>
+      <div class="desc-top-blurb">
+        NISE: Get Paid to Wait. Why let your cash sit idle? NISE is the Sydney-based platform that pays you to wait. Access 5,000+ US stocks with 24/5 trading and earn competitive returns on every uninvested dollar in your account.
+      </div>
+
+      <div class="desc-chip chip-B">中部详细描述</div>
+
+      <div class="desc-section">
+        <div class="desc-section-heading">💰 MAXIMIZE CAPITAL EFFICIENCY<br>Ensure every cent of your portfolio is optimized for growth.</div>
+        <div class="desc-feat">
+          <div class="desc-feat-name">Yield on Idle Cash</div>
+          <div class="desc-feat-text">Earn competitive returns on uninvested USD without moving funds to a separate account.</div>
+        </div>
+        <div class="desc-feat">
+          <div class="desc-feat-name">Daily Accrual</div>
+          <div class="desc-feat-text">Interest is calculated daily on your balance, ensuring your capital is always working for you.</div>
+        </div>
+        <div class="desc-feat">
+          <div class="desc-feat-name">No Account Fees</div>
+          <div class="desc-feat-text">Start earning from the first cent with no account-keeping fees or hidden hurdles.</div>
+        </div>
+      </div>
+
+      <div class="desc-section">
+        <div class="desc-section-heading">📈 US MARKET DEPTH<br>Access the world’s most liquid exchanges with advanced execution capabilities.</div>
+        <div class="desc-feat">
+          <div class="desc-feat-name">5,000+ US Stocks</div>
+          <div class="desc-feat-text">Trade a comprehensive range of US stocks from one streamlined interface.</div>
+        </div>
+        <div class="desc-feat">
+          <div class="desc-feat-name">Advanced Ranking Filters</div>
+          <div class="desc-feat-text">Use institutional-grade filters to rank assets by volume, volatility, and custom performance metrics.</div>
+        </div>
+        <div class="desc-feat">
+          <div class="desc-feat-name">Fractional Investing</div>
+          <div class="desc-feat-text">Build a diversified portfolio by purchasing fractions of shares in top-tier global companies.</div>
+        </div>
+      </div>
+
+      <div class="desc-section">
+        <div class="desc-section-heading">🌙 FLEXIBLE TRADING SESSIONS<br>Trade on your terms, regardless of your location or time zone.</div>
+        <div class="desc-feat">
+          <div class="desc-feat-name">24/5 Trading</div>
+          <div class="desc-feat-text">Access US stocks across all sessions, including overnight access during AU business hours.</div>
+        </div>
+        <div class="desc-feat">
+          <div class="desc-feat-name">Extended Coverage</div>
+          <div class="desc-feat-text">Seamlessly transition between pre-market, regular hours, and after-hours trading.</div>
+        </div>
+        <div class="desc-feat">
+          <div class="desc-feat-name">Detailed Reporting</div>
+          <div class="desc-feat-text">Track every transaction with clear asset change records and uncomplicated tax reporting.</div>
+        </div>
+      </div>
+
+      <div class="desc-section">
+        <div class="desc-section-heading">🔒 SECURITY YOU CAN TRUST<br>NISE is committed to the highest standards of asset protection and regulatory compliance.</div>
+        <div class="desc-feat">
+          <div class="desc-feat-name">ASIC Oversight</div>
+          <div class="desc-feat-text">Fully licensed and regulated by ASIC, ensuring adherence to strict financial conduct.</div>
+        </div>
+        <div class="desc-feat">
+          <div class="desc-feat-name">Regulated Custody</div>
+          <div class="desc-feat-text">All client funds and securities are held in secure, regulated environments with top-tier custodians.</div>
+        </div>
+        <div class="desc-feat">
+          <div class="desc-feat-name">Multi-Layered Security</div>
+          <div class="desc-feat-text">Protected by bank-grade encryption and Two-Factor Authentication (2FA) to ensure only you have access to your wealth.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 方案C ── -->
+    <div class="plan-card pC" style="padding:22px">
+      <div class="badge bC"><span class="dot"></span>方案 C</div>
+      <div class="desc-chip chip-C">顶部短描述</div>
+      <div class="desc-top-blurb">
+        NISE: US Markets in your pocket — with yield on every dollar in between. Stop waiting for the bell. NISE is a Sydney-based app that puts US markets at your fingertips. Earn yield on your idle cash and trade 24/5 to stay ahead of the global market with access to 5,000+ stocks.
+      </div>
+
+      <div class="desc-chip chip-C">中部详细描述</div>
+
+      <div class="desc-section">
+        <div class="desc-section-heading">💰 GET PAID TO WAIT<br>Your uninvested funds shouldn't be a missed opportunity.</div>
+        <div class="desc-feat">
+          <div class="desc-feat-name">Automatic Returns</div>
+          <div class="desc-feat-text">Your USD balances earn yield automatically while you wait for your next trade.</div>
+        </div>
+        <div class="desc-feat">
+          <div class="desc-feat-name">Compound Automatically</div>
+          <div class="desc-feat-text">Interest is paid monthly, helping you compound your wealth over time.</div>
+        </div>
+        <div class="desc-feat">
+          <div class="desc-feat-name">Always Accessible</div>
+          <div class="desc-feat-text">Your uninvested balance is available whenever you need it—no mandatory hold periods.</div>
+        </div>
+      </div>
+
+      <div class="desc-section">
+        <div class="desc-section-heading">📈 ONE WALLET, 5,000+ OPPORTUNITIES<br>Investing in the US has never been this straightforward.</div>
+        <div class="desc-feat">
+          <div class="desc-feat-name">Seamless Access</div>
+          <div class="desc-feat-text">Trade 5,000+ US stocks from one integrated wallet.</div>
+        </div>
+        <div class="desc-feat">
+          <div class="desc-feat-name">Overnight Trading</div>
+          <div class="desc-feat-text">React to US earnings and news during your daytime with 24/5 market access.</div>
+        </div>
+        <div class="desc-feat">
+          <div class="desc-feat-name">Fractional Shares</div>
+          <div class="desc-feat-text">Start small and grow big — invest in global giants with as little as US$10.</div>
+        </div>
+      </div>
+
+      <div class="desc-section">
+        <div class="desc-section-heading">✨ RADICALLY SIMPLE EXPERIENCE<br>A clean, distraction-free interface designed for the modern investor.</div>
+        <div class="desc-feat">
+          <div class="desc-feat-name">Paperless Setup</div>
+          <div class="desc-feat-text">Complete your registration digitally in minutes with our streamlined process.</div>
+        </div>
+        <div class="desc-feat">
+          <div class="desc-feat-name">One-Tap Execution</div>
+          <div class="desc-feat-text">Execute trades with a single tap through our intuitive, high-performance interface.</div>
+        </div>
+        <div class="desc-feat">
+          <div class="desc-feat-name">Smart Rankings</div>
+          <div class="desc-feat-text">Use our data-driven tools to identify top-performing stocks instantly.</div>
+        </div>
+      </div>
+
+      <div class="desc-section">
+        <div class="desc-section-heading">🔒 SECURITY &amp; COMPLIANCE<br>Invest with peace of mind on a platform that prioritizes your security and clarity.</div>
+        <div class="desc-feat">
+          <div class="desc-feat-name">ASIC Regulated</div>
+          <div class="desc-feat-text">Nise Invest Pty Ltd is an AFSL holder regulated by ASIC.</div>
+        </div>
+        <div class="desc-feat">
+          <div class="desc-feat-name">Institutional-Grade Security</div>
+          <div class="desc-feat-text">Bank-grade encryption and 2FA protect your account from unauthorized access.</div>
+        </div>
+        <div class="desc-feat">
+          <div class="desc-feat-name">Transparent Fees</div>
+          <div class="desc-feat-text">We are fully transparent with our costs, ensuring you know exactly what you're paying.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     PANEL 4 · 图片优势展示（3个方案）
+══════════════════════════════════════ -->
+<div class="panel" id="panel-visual">
+  <div class="sec-head">
+    <div class="sec-eyebrow">Panel 04</div>
+    <h2 class="sec-title">图片优势展示</h2>
+    <p class="sec-desc">三个方案各6张截图对应的卖点文案，标题 + 说明文字并列对比。</p>
+  </div>
+
+  <div class="grid-3">
+
+    <!-- ── 方案A ── -->
+    <div class="plan-card pA" style="padding:0;overflow:hidden">
+      <div style="padding:22px 22px 16px">
+        <div class="badge bA"><span class="dot"></span>方案 A</div>
+      </div>
+      <div class="adv-row">
+        <div class="adv-item">
+          <div class="adv-num num-A">1</div>
+          <div class="adv-content">
+            <div class="adv-title">Earn while you wait</div>
+            <div class="adv-desc">Interest on cash balances, calculated and paid daily.</div>
+          </div>
+        </div>
+        <div class="adv-item">
+          <div class="adv-num num-A">2</div>
+          <div class="adv-content">
+            <div class="adv-title">Order Execution</div>
+            <div class="adv-desc">Millisecond response time. Built for traders who can't afford to wait.</div>
+          </div>
+        </div>
+        <div class="adv-item">
+          <div class="adv-num num-A">3</div>
+          <div class="adv-content">
+            <div class="adv-title">5,000+ US Stocks</div>
+            <div class="adv-desc">Full access to top-tier US markets.</div>
+          </div>
+        </div>
+        <div class="adv-item">
+          <div class="adv-num num-A">4</div>
+          <div class="adv-content">
+            <div class="adv-title">24/5 Full-Session Trading</div>
+            <div class="adv-desc">Access US markets pre, post, and overnight.</div>
+          </div>
+        </div>
+        <div class="adv-item">
+          <div class="adv-num num-A">5</div>
+          <div class="adv-content">
+            <div class="adv-title">Smart Rankings, Smarter Trades</div>
+            <div class="adv-desc">See which stocks are worth your attention.</div>
+          </div>
+        </div>
+        <div class="adv-item">
+          <div class="adv-num num-A">6</div>
+          <div class="adv-content">
+            <div class="adv-title">ASIC Regulated</div>
+            <div class="adv-desc">Segregated client funds for your capital security.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 方案B ── -->
+    <div class="plan-card pB" style="padding:0;overflow:hidden">
+      <div style="padding:22px 22px 16px">
+        <div class="badge bB"><span class="dot"></span>方案 B</div>
+      </div>
+      <div class="adv-row">
+        <div class="adv-item">
+          <div class="adv-num num-B">1</div>
+          <div class="adv-content">
+            <div class="adv-title">Don't let your cash sit idle</div>
+            <div class="adv-desc">Earn interest on your uninvested cash balance.</div>
+          </div>
+        </div>
+        <div class="adv-item">
+          <div class="adv-num num-B">2</div>
+          <div class="adv-content">
+            <div class="adv-title">Execution Speed</div>
+            <div class="adv-desc">Built for speed. No delays, just pure performance.</div>
+          </div>
+        </div>
+        <div class="adv-item">
+          <div class="adv-num num-B">3</div>
+          <div class="adv-content">
+            <div class="adv-title">5,000+ US Assets</div>
+            <div class="adv-desc">Trade US stocks and Options in one app.</div>
+          </div>
+        </div>
+        <div class="adv-item">
+          <div class="adv-num num-B">4</div>
+          <div class="adv-content">
+            <div class="adv-title">Trade US Stocks 24/5</div>
+            <div class="adv-desc">Never miss a beat with real-time quotes.</div>
+          </div>
+        </div>
+        <div class="adv-item">
+          <div class="adv-num num-B">5</div>
+          <div class="adv-content">
+            <div class="adv-title">Rank First, Trade Better</div>
+            <div class="adv-desc">Know exactly which stocks to watch before you enter.</div>
+          </div>
+        </div>
+        <div class="adv-item">
+          <div class="adv-num num-B">6</div>
+          <div class="adv-content">
+            <div class="adv-title">ASIC Regulated</div>
+            <div class="adv-desc">Fast onboarding. Start investing in minutes.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 方案C ── -->
+    <div class="plan-card pC" style="padding:0;overflow:hidden">
+      <div style="padding:22px 22px 16px">
+        <div class="badge bC"><span class="dot"></span>方案 C</div>
+      </div>
+      <div class="adv-row">
+        <div class="adv-item">
+          <div class="adv-num num-C">1</div>
+          <div class="adv-content">
+            <div class="adv-title">A better way to earn</div>
+            <div class="adv-desc">Interest on cash balances, paid out daily.</div>
+          </div>
+        </div>
+        <div class="adv-item">
+          <div class="adv-num num-C">2</div>
+          <div class="adv-content">
+            <div class="adv-title">Millisecond Response</div>
+            <div class="adv-desc">Precision execution time for precision trading.</div>
+          </div>
+        </div>
+        <div class="adv-item">
+          <div class="adv-num num-C">3</div>
+          <div class="adv-content">
+            <div class="adv-title">Deep US Market Access</div>
+            <div class="adv-desc">5,000+ US stocks at your fingertips.</div>
+          </div>
+        </div>
+        <div class="adv-item">
+          <div class="adv-num num-C">4</div>
+          <div class="adv-content">
+            <div class="adv-title">Round-the-Clock Access</div>
+            <div class="adv-desc">Trade top US stocks 24/5, day or night.</div>
+          </div>
+        </div>
+        <div class="adv-item">
+          <div class="adv-num num-C">5</div>
+          <div class="adv-content">
+            <div class="adv-title">Empower Your Trades</div>
+            <div class="adv-desc">100+ indicators and TradingView powered charts.</div>
+          </div>
+        </div>
+        <div class="adv-item">
+          <div class="adv-num num-C">6</div>
+          <div class="adv-content">
+            <div class="adv-title">Your Edge, Ranked</div>
+            <div class="adv-desc">Instantly see the top opportunities across US markets.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</main>
+
+<!-- ─── FOOTER ─── -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-label">⚖ Legal &amp; Disclosures — 三方案通用</div>
+    <p class="footer-text">
+      Investing in financial products involves risk to your capital. The value of investments can go down as well as up, and you may receive back less than your original investment. Past performance is not a reliable indicator of future results. All references and images are for demonstrative purposes only and are not recommendations to invest in the securities listed. Please read the Financial Services Guide (FSG), Product Disclosure Statement (PDS), and Target Market Determination (TMD) before making any investment decision. Nise Invest Pty Ltd (ACN 690 010 809) is a Corporate Authorised Representative (CAR No. 001318142) of Zero Securities Pty Ltd (AFSL 244040), regulated by the Australian Securities and Investments Commission (ASIC). Registered Office: [702/7 Macquarie Pl, Sydney NSW 2000, Australia], Sydney, Australia. Visit <a href="https://www.nise" target="_blank">www.nise</a> for full terms and conditions.
+    </p>
+  </div>
+</footer>
+
+<script>
+  const btns = document.querySelectorAll('.nav-btn');
+  const panels = document.querySelectorAll('.panel');
+
+  btns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const target = btn.dataset.panel;
+      btns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      panels.forEach(p => {
+        p.classList.remove('active');
+        if (p.id === 'panel-' + target) p.classList.add('active');
+      });
+    });
+  });
+</script>
+</body>
+</html>
